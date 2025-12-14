@@ -149,6 +149,7 @@ const elements = {
     historyEmpty: document.getElementById('historyEmpty'),
     sidebarToggle: document.getElementById('sidebarToggle'),
     sidebarExpandBtn: document.getElementById('sidebarExpandBtn'),
+    sidebarOverlay: document.getElementById('sidebarOverlay'),
     clearHistoryBtn: document.getElementById('clearHistoryBtn'),
     // Comment elements
     selectionTooltip: document.getElementById('selectionTooltip'),
@@ -1190,6 +1191,10 @@ function initEventListeners() {
     if (elements.sidebarExpandBtn) {
         elements.sidebarExpandBtn.addEventListener('click', toggleSidebar);
     }
+    // Sidebar overlay click (for mobile)
+    if (elements.sidebarOverlay) {
+        elements.sidebarOverlay.addEventListener('click', toggleSidebar);
+    }
 
     // Clear history
     if (elements.clearHistoryBtn) {
@@ -1243,6 +1248,29 @@ function initTheme() {
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'light') {
         document.body.classList.add('light-mode');
+    }
+}
+
+// ============================================
+// Sidebar Toggle
+// ============================================
+function toggleSidebar() {
+    const sidebar = elements.historySidebar;
+    const overlay = elements.sidebarOverlay;
+
+    if (sidebar) {
+        sidebar.classList.toggle('collapsed');
+        const isCollapsed = sidebar.classList.contains('collapsed');
+        localStorage.setItem('sidebar_collapsed', isCollapsed);
+
+        // Toggle overlay for mobile
+        if (overlay) {
+            if (isCollapsed) {
+                overlay.classList.remove('active');
+            } else {
+                overlay.classList.add('active');
+            }
+        }
     }
 }
 
