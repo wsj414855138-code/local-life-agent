@@ -28,6 +28,12 @@ const CEO_SYSTEM_PROMPT = `你是美团核心本地商业CEO，拥有从产品�
 【你的沟通对象】
 美团到店餐饮创新业务负责人，正在向你请教业务问题。
 
+【融合式思维】
+你的团队包括产品、销售、增长、商分、财务、营销等专家，你已经内化了他们的思维方式。
+回答问题时，你会自然融合这些视角的洞察，但不需要声明"从XX视角来看"。
+你的输出应该是一份整合后的CEO观点，像一个人在说话，不是多人接力。
+根据问题本质，智能决定覆盖哪些维度，重点突出、详略得当。
+
 【内容质量标准】
 1. 所有内容必须基于可验证的事实依据
 2. 对不确定内容标注"[待验证]"
@@ -57,46 +63,68 @@ const PHASE_TWO_PROMPT = `用户已经回答了你的追问，现在请基于用
 3. 归类分组：相似内容归类，MECE（相互独立、完全穷尽）
 4. 逻辑递进：按时间/结构/程度/因果等逻辑展开
 
-【输出框架 - 根据问题类型灵活选择】
+【融合式输出原则】
+1. 你是CEO，已内化产品/销售/增长/商分/财务/营销团队的思维
+2. 不要标注"从XX视角"，直接给出整合后的观点
+3. 根据问题本质，智能决定在哪些维度深入、哪些略过
+4. 像一个人在说话，不是多人接力
+5. 重点突出、详略得当，不为全面而堆砌
 
-=== 框架A：新场景探索型（推荐用于新业务/创新探索问题）===
-① WHY - 为什么要做？
-   - 市场空间有多大？增长趋势如何？
-   - 行业痛点是什么？未被满足的需求？
-② WHO & WHAT - 目标用户和需求
-   - 目标用户画像和场景定义
-   - 核心Use Case是什么？
-   - 目前解决方案的不足？
-③ 商户/平台价值（如适用）
-   - 商户价值主张是什么？
-   - 平台的切入路径和抓手？
-④ HOW - 解决方案设计
-   - 产品方案设计
-   - 行业对标分析
-   - 常见问题预判
-⑤ WHEN - 执行计划
-   - 阶段目标和里程碑
-   - 资源需求和优先级
+【输出框架 - 动态结构】
 
-=== 框架B：问题诊断型（推荐用于现有业务优化问题）===
-① 问题定义：现象描述 + 核心矛盾
-② 原因分析：宏观/中观/微观三层拆解
-③ 解决方案：可选方案对比 + 推荐方案
-④ 行动计划：具体步骤 + 负责人 + 时间节点
-⑤ 风险预判：潜在风险 + 应对措施
+## 核心结论
+用1-2句话直接回答用户的核心问题，给出明确建议。
 
-=== 框架C：PR/FAQ型（推荐用于产品规划/立项论证）===
-① 新闻稿（PR）：假设产品已上线，写一段100字新闻稿
-② 客户FAQ：3-5个用户最可能问的问题及回答
-③ 内部FAQ：3-5个老板/协作方最可能问的问题及回答
-④ 核心指标：成功定义和北极星指标
-⑤ 执行路径：MVP → V1 → 规模化
+---
 
-=== 框架D：研报型（推荐用于行业分析/竞品分析）===
-① 宏观：行业趋势、政策环境、市场规模
-② 中观：竞争格局、产业链分析、商业模式
-③ 微观：用户洞察、产品对比、运营策略
-④ 结论：机会判断 + 行动建议
+（以下模块根据问题本质智能选择，不必全部覆盖）
+
+## 问题本质与机会判断
+分析用户问题的本质矛盾、关键约束、机会窗口。
+
+## 目标用户与需求洞察
+（如与用户/需求相关）用户是谁、痛点是什么、场景如何。
+
+## 解决方案设计
+针对问题，给出具体可落地的解决方案和行动路径。
+
+## 市场与竞争分析
+（如涉及市场/竞争）行业环境、竞品动态、差异化机会。
+
+## 商业可行性评估
+（如涉及投入产出）ROI测算、资源需求、盈亏平衡点。
+
+## 增长与运营策略
+（如涉及增长）关键漏斗、拉新留存、核心抓手。
+
+## 执行计划
+阶段划分、里程碑、资源配置、协作机制。
+
+## 风险与应对
+主要风险识别、应对措施、止损红线。
+
+---
+
+## 深度追问（CEO自问自答）
+
+基于以上分析，我预判你可能会有以下疑问，提前回答：
+
+### Q1: 如果竞对抢先一步怎么办？
+**分析**：基于前文策略，分析竞对可能的动作
+**应对**：给出具体的竞争应对策略
+
+### Q2: 这个方案最大的风险点在哪？
+**分析**：识别最脆弱的假设或环节
+**应对**：给出降低风险的具体措施
+
+### Q3: 如果只有50%的资源，优先做什么？
+**建议**：给出精简版的优先级排序
+**理由**：解释为什么这样排序
+
+### Q4: 如果要向上汇报，一句话怎么说？
+一句话总结核心建议。
+
+---
 
 【内容质量标准】
 1. 所有内容必须基于可验证的事实依据，不添加未经验证的信息
@@ -118,7 +146,7 @@ const PHASE_TWO_PROMPT = `用户已经回答了你的追问，现在请基于用
 
 配图位置建议：
 - 在核心观点后插入概念图/思维导图
-- 在行动计划部分插入流程图/时间线
+- 在执行计划部分插入流程图/时间线
 - 在数据分析部分插入图表示意`;
 
 
@@ -160,7 +188,8 @@ const elements = {
     commentInput: document.getElementById('commentInput'),
     submitCommentBtn: document.getElementById('submitCommentBtn'),
     logoHomeBtn: document.getElementById('logoHomeBtn'),
-    inputContainer: document.querySelector('.input-container')
+    inputContainer: document.querySelector('.input-container'),
+    enableSearch: document.getElementById('enableSearch')
 };
 
 // ============================================
@@ -179,12 +208,82 @@ let state = {
 // ============================================
 // Gemini API Integration (REST API)
 // ============================================
+
+// Complexity detection for intelligent model selection
+async function detectComplexity(question) {
+    const apiKey = localStorage.getItem('gemini_api_key');
+    if (!apiKey) return 5; // Default medium complexity
+
+    const prompt = `判断这个问题的复杂度(1-10分)。
+1-4分：简单问题（定义、常识、单一维度）
+5-7分：中等问题（多维度、需要分析）
+8-10分：复杂问题（战略级、创新探索、多利益方）
+
+问题：${question}
+
+只返回一个数字，不要其他内容。`;
+
+    try {
+        const url = `${GEMINI_API_BASE}/gemini-2.5-flash:generateContent?key=${apiKey}`;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ role: 'user', parts: [{ text: prompt }] }],
+                generationConfig: { temperature: 0, maxOutputTokens: 10 }
+            })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            const score = parseInt(text.trim());
+            if (!isNaN(score) && score >= 1 && score <= 10) {
+                console.log(`Complexity score: ${score}`);
+                return score;
+            }
+        }
+    } catch (e) {
+        console.error('Complexity detection failed:', e);
+    }
+    return 5; // Default to medium
+}
+
+// Select model based on complexity
+function selectModelByComplexity(complexity, isPhaseTwo) {
+    // Phase 1 (questions generation) always uses Flash
+    if (!isPhaseTwo) {
+        return 'gemini-2.5-flash';
+    }
+
+    // Phase 2: use Pro for complex questions (score >= 7)
+    if (complexity >= 7) {
+        console.log('Using Gemini 3 Pro for complex question');
+        return 'gemini-2.5-pro';
+    }
+
+    console.log('Using Gemini 3 Flash for regular question');
+    return 'gemini-2.5-flash';
+}
+
 async function generateResponse(userMessage, isPhaseTwo = false) {
     const apiKey = localStorage.getItem('gemini_api_key');
-    const modelName = localStorage.getItem('gemini_model') || 'gemini-2.5-pro';
+    const enableSearch = localStorage.getItem('enable_search') !== 'false';
+    const autoModelSelect = localStorage.getItem('auto_model_select') !== 'false';
 
     if (!apiKey) {
         throw new Error('请先在设置中配置 API Key');
+    }
+
+    // Determine model to use
+    let modelName;
+    if (autoModelSelect) {
+        // Smart model selection
+        const complexity = isPhaseTwo ? await detectComplexity(state.userTopic) : 3;
+        modelName = selectModelByComplexity(complexity, isPhaseTwo);
+    } else {
+        // User manual selection
+        modelName = localStorage.getItem('gemini_model') || 'gemini-2.5-flash';
     }
 
     // Build contents array
@@ -210,23 +309,33 @@ async function generateResponse(userMessage, isPhaseTwo = false) {
 
     const url = `${GEMINI_API_BASE}/${modelName}:streamGenerateContent?key=${apiKey}&alt=sse`;
 
+    // Build request body
+    const requestBody = {
+        contents: contents,
+        systemInstruction: {
+            parts: [{ text: CEO_SYSTEM_PROMPT }]
+        },
+        generationConfig: {
+            temperature: 0.7,
+            topP: 0.95,
+            topK: 40,
+            maxOutputTokens: 8192
+        }
+    };
+
+    // Enable Google Search Grounding for Phase Two (report generation)
+    if (isPhaseTwo && enableSearch) {
+        requestBody.tools = [{
+            googleSearch: {}
+        }];
+    }
+
     const response = await fetch(url, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-            contents: contents,
-            systemInstruction: {
-                parts: [{ text: CEO_SYSTEM_PROMPT }]
-            },
-            generationConfig: {
-                temperature: 0.7,
-                topP: 0.95,
-                topK: 40,
-                maxOutputTokens: 8192
-            }
-        })
+        body: JSON.stringify(requestBody)
     });
 
     if (!response.ok) {
@@ -756,7 +865,12 @@ async function submitQuestionsAnswers(cardElement) {
         });
 
         // Process images (wait for all images to complete)
-        await processImagesInContent(contentElement, fullResponse);
+        try {
+            await processImagesInContent(contentElement, fullResponse);
+        } catch (imgError) {
+            console.error('Image processing error:', imgError);
+            // Continue with saving even if image processing fails
+        }
 
         // Get questions card HTML for history
         const questionsCard = elements.chatMessages.querySelector('.questions-card');
@@ -766,7 +880,9 @@ async function submitQuestionsAnswers(cardElement) {
         const renderedReportHtml = contentElement.innerHTML;
 
         // Save to history with full conversation context
-        const convId = saveConversationToHistory(state.userTopic, fullResponse, questionsHtml, formattedAnswers, renderedReportHtml);
+        console.log('Saving to history:', state.userTopic);
+        const convId = await saveConversationToHistory(state.userTopic, fullResponse, questionsHtml, formattedAnswers, renderedReportHtml);
+        console.log('Saved conversation ID:', convId);
         state.currentConversationId = convId;
 
         // Update state
@@ -962,9 +1078,37 @@ function showModal() {
     elements.settingsModal.classList.add('active');
     // Load saved settings
     elements.apiKeyInput.value = localStorage.getItem('gemini_api_key') || '';
-    elements.modelSelect.value = localStorage.getItem('gemini_model') || 'gemini-2.5-pro';
+
+    // Load auto model select
+    const autoModelSelect = document.getElementById('autoModelSelect');
+    const manualModelGroup = document.getElementById('manualModelGroup');
+    if (autoModelSelect) {
+        autoModelSelect.checked = localStorage.getItem('auto_model_select') !== 'false';
+        if (manualModelGroup) {
+            manualModelGroup.style.display = autoModelSelect.checked ? 'none' : 'block';
+        }
+        autoModelSelect.addEventListener('change', () => {
+            if (manualModelGroup) {
+                manualModelGroup.style.display = autoModelSelect.checked ? 'none' : 'block';
+            }
+        });
+    }
+
+    // Load model with fallback if saved value doesn't exist in options
+    const savedModel = localStorage.getItem('gemini_model');
+    const validModels = ['gemini-2.5-flash', 'gemini-2.5-pro'];
+    if (savedModel && validModels.includes(savedModel)) {
+        elements.modelSelect.value = savedModel;
+    } else {
+        elements.modelSelect.value = 'gemini-2.5-flash';
+        localStorage.setItem('gemini_model', 'gemini-2.5-flash');
+    }
+
     if (elements.enableImageGen) {
         elements.enableImageGen.checked = localStorage.getItem('enable_image_gen') !== 'false';
+    }
+    if (elements.enableSearch) {
+        elements.enableSearch.checked = localStorage.getItem('enable_search') !== 'false';
     }
 }
 
@@ -975,14 +1119,23 @@ function hideModal() {
 function saveSettings() {
     const apiKey = elements.apiKeyInput.value.trim();
     const model = elements.modelSelect.value;
+    const autoModelSelect = document.getElementById('autoModelSelect');
 
     if (apiKey) {
         localStorage.setItem('gemini_api_key', apiKey);
     }
     localStorage.setItem('gemini_model', model);
 
+    if (autoModelSelect) {
+        localStorage.setItem('auto_model_select', autoModelSelect.checked);
+    }
+
     if (elements.enableImageGen) {
         localStorage.setItem('enable_image_gen', elements.enableImageGen.checked);
+    }
+
+    if (elements.enableSearch) {
+        localStorage.setItem('enable_search', elements.enableSearch.checked);
     }
 
     hideModal();
@@ -1176,6 +1329,14 @@ function initEventListeners() {
                     exportToPDF(reportToPrint);
                 }
                 break;
+
+            case 'email':
+                // Share via email
+                const reportToEmail = actionBtn.closest('.report-card');
+                if (reportToEmail) {
+                    shareViaEmail(reportToEmail);
+                }
+                break;
         }
     });
 
@@ -1275,11 +1436,79 @@ function toggleSidebar() {
 }
 
 // ============================================
-// History Management
+// History Management (IndexedDB for large storage)
 // ============================================
 const HISTORY_STORAGE_KEY = 'conversation_history_list';
+const DB_NAME = 'LocalLifeAgentDB';
+const DB_VERSION = 1;
+const STORE_NAME = 'conversations';
 
-function getHistoryList() {
+let db = null;
+
+// Initialize IndexedDB
+function initDB() {
+    return new Promise((resolve, reject) => {
+        if (db) {
+            resolve(db);
+            return;
+        }
+
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+        request.onerror = () => {
+            console.error('IndexedDB open failed:', request.error);
+            reject(request.error);
+        };
+
+        request.onsuccess = () => {
+            db = request.result;
+            console.log('IndexedDB initialized');
+            resolve(db);
+        };
+
+        request.onupgradeneeded = (event) => {
+            const database = event.target.result;
+
+            // Create object store for conversations
+            if (!database.objectStoreNames.contains(STORE_NAME)) {
+                const store = database.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                store.createIndex('createdAt', 'createdAt', { unique: false });
+                console.log('IndexedDB store created');
+            }
+        };
+    });
+}
+
+// Get all history items from IndexedDB
+async function getHistoryListAsync() {
+    try {
+        await initDB();
+
+        return new Promise((resolve, reject) => {
+            const transaction = db.transaction([STORE_NAME], 'readonly');
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.getAll();
+
+            request.onsuccess = () => {
+                // Sort by createdAt descending (newest first)
+                const items = request.result || [];
+                items.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                resolve(items);
+            };
+
+            request.onerror = () => {
+                console.error('Failed to get history:', request.error);
+                resolve([]);
+            };
+        });
+    } catch (e) {
+        console.error('IndexedDB error, falling back to localStorage:', e);
+        return getHistoryListFallback();
+    }
+}
+
+// Fallback to localStorage
+function getHistoryListFallback() {
     try {
         const data = localStorage.getItem(HISTORY_STORAGE_KEY);
         return data ? JSON.parse(data) : [];
@@ -1288,12 +1517,100 @@ function getHistoryList() {
     }
 }
 
-function saveHistoryList(list) {
-    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(list));
+// Synchronous version for compatibility (returns cached or empty)
+let cachedHistoryList = null;
+
+function getHistoryList() {
+    // Return cached if available, otherwise empty (async will update later)
+    if (cachedHistoryList !== null) {
+        return cachedHistoryList;
+    }
+    // Fallback to localStorage for initial sync call
+    return getHistoryListFallback();
 }
 
-function saveConversationToHistory(topic, reportContent, questionsHtml, userAnswers, renderedReportHtml) {
-    const list = getHistoryList();
+// Save single conversation to IndexedDB
+async function saveConversationToDB(item) {
+    try {
+        await initDB();
+
+        return new Promise((resolve, reject) => {
+            const transaction = db.transaction([STORE_NAME], 'readwrite');
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.put(item);
+
+            request.onsuccess = () => {
+                console.log('Saved to IndexedDB:', item.id);
+                resolve(true);
+            };
+
+            request.onerror = () => {
+                console.error('Failed to save to IndexedDB:', request.error);
+                reject(request.error);
+            };
+        });
+    } catch (e) {
+        console.error('IndexedDB save error:', e);
+        throw e;
+    }
+}
+
+// Delete from IndexedDB
+async function deleteFromDB(id) {
+    try {
+        await initDB();
+
+        return new Promise((resolve) => {
+            const transaction = db.transaction([STORE_NAME], 'readwrite');
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.delete(id);
+
+            request.onsuccess = () => resolve(true);
+            request.onerror = () => resolve(false);
+        });
+    } catch (e) {
+        console.error('IndexedDB delete error:', e);
+        return false;
+    }
+}
+
+// Update single item in IndexedDB
+async function updateInDB(id, updates) {
+    try {
+        await initDB();
+
+        return new Promise((resolve, reject) => {
+            const transaction = db.transaction([STORE_NAME], 'readwrite');
+            const store = transaction.objectStore(STORE_NAME);
+            const getRequest = store.get(id);
+
+            getRequest.onsuccess = () => {
+                const item = getRequest.result;
+                if (item) {
+                    const updatedItem = { ...item, ...updates };
+                    const putRequest = store.put(updatedItem);
+                    putRequest.onsuccess = () => resolve(true);
+                    putRequest.onerror = () => reject(putRequest.error);
+                } else {
+                    resolve(false);
+                }
+            };
+
+            getRequest.onerror = () => reject(getRequest.error);
+        });
+    } catch (e) {
+        console.error('IndexedDB update error:', e);
+        return false;
+    }
+}
+
+// Legacy saveHistoryList for compatibility (no longer saves full list)
+function saveHistoryList(list) {
+    // For backwards compatibility, but we now use individual saves
+    cachedHistoryList = list;
+}
+
+async function saveConversationToHistory(topic, reportContent, questionsHtml, userAnswers, renderedReportHtml) {
     const id = 'conv_' + Date.now();
     const preview = reportContent.substring(0, 100).replace(/[#*\n]/g, ' ').trim();
 
@@ -1303,56 +1620,81 @@ function saveConversationToHistory(topic, reportContent, questionsHtml, userAnsw
         createdAt: new Date().toISOString(),
         preview: preview,
         reportContent: reportContent,
-        renderedReportHtml: renderedReportHtml || '',  // Store rendered HTML with images
-        questionsHtml: questionsHtml || '',  // Store questions card HTML
-        userAnswers: userAnswers || '',      // Store user's formatted answers
-        followupComments: []                  // Store follow-up comments
+        renderedReportHtml: renderedReportHtml || '',  // Now safe to save with IndexedDB!
+        questionsHtml: questionsHtml || '',
+        userAnswers: userAnswers || '',
+        followupComments: []
     };
 
-    // Add to beginning
-    list.unshift(item);
-
-    // Keep max 20 items
-    if (list.length > 20) {
-        list.pop();
+    try {
+        await saveConversationToDB(item);
+        console.log('Conversation saved to IndexedDB:', id);
+    } catch (e) {
+        console.error('Failed to save to IndexedDB, trying without images:', e);
+        // Fallback: try without rendered HTML
+        item.renderedReportHtml = '';
+        try {
+            await saveConversationToDB(item);
+        } catch (e2) {
+            console.error('Complete save failure:', e2);
+        }
     }
 
-    saveHistoryList(list);
-    renderHistoryList();
+    // Refresh history list
+    await refreshHistoryList();
 
-    // Return the ID for tracking
     return id;
 }
 
-function deleteHistoryItem(id) {
-    const list = getHistoryList();
-    const newList = list.filter(item => item.id !== id);
-    saveHistoryList(newList);
+async function deleteHistoryItem(id) {
+    await deleteFromDB(id);
+    await refreshHistoryList();
+}
+
+async function refreshHistoryList() {
+    cachedHistoryList = await getHistoryListAsync();
     renderHistoryList();
 }
 
-function saveCommentToHistory(conversationId, comment) {
-    const list = getHistoryList();
-    const item = list.find(h => h.id === conversationId);
-    if (!item) return;
+async function saveCommentToHistory(conversationId, comment) {
+    try {
+        await initDB();
 
-    if (!item.followupComments) {
-        item.followupComments = [];
+        const transaction = db.transaction([STORE_NAME], 'readwrite');
+        const store = transaction.objectStore(STORE_NAME);
+        const getRequest = store.get(conversationId);
+
+        await new Promise((resolve, reject) => {
+            getRequest.onsuccess = () => {
+                const item = getRequest.result;
+                if (item) {
+                    if (!item.followupComments) {
+                        item.followupComments = [];
+                    }
+                    item.followupComments.push(comment);
+                    const putRequest = store.put(item);
+                    putRequest.onsuccess = () => resolve(true);
+                    putRequest.onerror = () => reject(putRequest.error);
+                } else {
+                    resolve(false);
+                }
+            };
+            getRequest.onerror = () => reject(getRequest.error);
+        });
+    } catch (e) {
+        console.error('Failed to save comment:', e);
     }
-    item.followupComments.push(comment);
-    saveHistoryList(list);
 }
 
-function renameHistoryItem(id) {
+async function renameHistoryItem(id) {
     const list = getHistoryList();
     const item = list.find(h => h.id === id);
     if (!item) return;
 
     const newName = prompt('请输入新的话题名称：', item.topic);
     if (newName && newName.trim()) {
-        item.topic = newName.trim();
-        saveHistoryList(list);
-        renderHistoryList();
+        await updateInDB(id, { topic: newName.trim() });
+        await refreshHistoryList();
     }
 }
 
@@ -1528,12 +1870,43 @@ function toggleSidebar() {
     localStorage.setItem('sidebar_collapsed', isCollapsed ? 'true' : 'false');
 }
 
-function initSidebar() {
+async function initSidebar() {
     const isCollapsed = localStorage.getItem('sidebar_collapsed') === 'true';
     if (isCollapsed) {
         elements.historySidebar.classList.add('collapsed');
     }
-    renderHistoryList();
+
+    // Initialize IndexedDB
+    try {
+        await initDB();
+
+        // Migrate from localStorage if needed
+        const oldData = localStorage.getItem(HISTORY_STORAGE_KEY);
+        if (oldData) {
+            const oldList = JSON.parse(oldData);
+            if (oldList && oldList.length > 0) {
+                console.log('Migrating', oldList.length, 'items from localStorage to IndexedDB...');
+                for (const item of oldList) {
+                    try {
+                        await saveConversationToDB(item);
+                    } catch (e) {
+                        console.error('Migration failed for item:', item.id, e);
+                    }
+                }
+                // Clear localStorage after successful migration
+                localStorage.removeItem(HISTORY_STORAGE_KEY);
+                console.log('Migration complete!');
+            }
+        }
+
+        // Load from IndexedDB
+        await refreshHistoryList();
+    } catch (e) {
+        console.error('IndexedDB init failed, falling back to localStorage:', e);
+        // Fallback to old localStorage-based rendering
+        cachedHistoryList = getHistoryListFallback();
+        renderHistoryList();
+    }
 }
 
 // ============================================
@@ -1720,12 +2093,41 @@ function initCommentListeners() {
 // ============================================
 // PDF Export Function
 // ============================================
-function exportToPDF(reportElement) {
+async function exportToPDF(reportElement) {
     const reportContent = reportElement.querySelector('.report-content');
     if (!reportContent) return;
 
+    // First, collect valid image URLs from original DOM (before cloning)
+    const validImageContainers = new Set();
+    reportContent.querySelectorAll('.ai-generated-image').forEach(container => {
+        const img = container.querySelector('img');
+        // Check if image is valid: has src, is loaded successfully, and has actual dimensions
+        if (img && img.src && img.complete && img.naturalWidth > 0) {
+            validImageContainers.add(container);
+        }
+    });
+
+    // Clone content
+    const cleanContent = reportContent.cloneNode(true);
+
+    // Remove failed image elements and loading placeholders
+    cleanContent.querySelectorAll('.image-error, .image-loading').forEach(el => el.remove());
+
+    // Remove AI image containers that weren't in our valid set
+    cleanContent.querySelectorAll('.ai-generated-image').forEach((container, index) => {
+        const originalContainers = Array.from(reportContent.querySelectorAll('.ai-generated-image'));
+        const originalContainer = originalContainers[index];
+        if (!originalContainer || !validImageContainers.has(originalContainer)) {
+            container.remove();
+        }
+    });
+
     // Create a new window for printing
     const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+        alert('请允许弹出窗口以导出PDF');
+        return;
+    }
 
     // Build print-friendly HTML
     const printStyles = `
@@ -1751,29 +2153,19 @@ function exportToPDF(reportElement) {
             strong { color: #1a1a1a; }
             code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; }
             pre { background: #f5f5f5; padding: 1em; border-radius: 6px; overflow-x: auto; }
-            img { max-width: 100%; height: auto; margin: 1em 0; }
+            img { max-width: 100%; height: auto; margin: 1em 0; display: block; }
+            .ai-generated-image { margin: 1.5em 0; }
+            .ai-generated-image img { border-radius: 8px; }
+            .image-caption { font-size: 0.85em; color: #666; margin-top: 0.5em; text-align: center; }
             .header { text-align: center; margin-bottom: 2em; }
             .header h1 { border: none; }
             .footer { text-align: center; margin-top: 3em; color: #888; font-size: 0.9em; }
-            .image-error, .image-loading, .ai-generated-image:has(.image-error) { display: none !important; }
             @media print {
                 body { padding: 20px; }
-                .image-error, .image-loading { display: none !important; }
+                img { break-inside: avoid; }
             }
         </style>
     `;
-
-    // Clone and clean the content for PDF
-    const cleanContent = reportContent.cloneNode(true);
-
-    // Remove failed image elements
-    cleanContent.querySelectorAll('.image-error, .image-loading').forEach(el => el.remove());
-    cleanContent.querySelectorAll('.ai-generated-image').forEach(container => {
-        const img = container.querySelector('img');
-        if (!img || !img.src || img.src.startsWith('data:') === false) {
-            container.remove();
-        }
-    });
 
     const date = new Date().toLocaleDateString('zh-CN');
     const printHTML = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>CEO专业建议报告</title>' +
@@ -1782,15 +2174,68 @@ function exportToPDF(reportElement) {
         date +
         '</p></div>' +
         cleanContent.innerHTML +
-        '<div class="footer"><p>由本地生活Agent生成 · Powered by Gemini</p></div></body></html>';
+        '</body></html>';
 
     printWindow.document.write(printHTML);
     printWindow.document.close();
 
-    // Wait for content to load then print
+    // Wait for all images to load in print window, then print
     printWindow.onload = function () {
-        printWindow.print();
+        const printImages = printWindow.document.querySelectorAll('img');
+        if (printImages.length === 0) {
+            printWindow.print();
+            return;
+        }
+
+        let loadedCount = 0;
+        const checkAllLoaded = () => {
+            loadedCount++;
+            if (loadedCount >= printImages.length) {
+                setTimeout(() => printWindow.print(), 200);
+            }
+        };
+
+        printImages.forEach(img => {
+            if (img.complete) {
+                checkAllLoaded();
+            } else {
+                img.onload = checkAllLoaded;
+                img.onerror = checkAllLoaded;
+            }
+        });
+
+        // Fallback timeout
+        setTimeout(() => printWindow.print(), 5000);
     };
+}
+
+// ============================================
+// Email Share Function
+// ============================================
+function shareViaEmail(reportElement) {
+    const reportContent = reportElement.querySelector('.report-content');
+    if (!reportContent) return;
+
+    // Extract plain text content
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = reportContent.innerHTML;
+
+    // Remove images for email (can't embed easily)
+    tempDiv.querySelectorAll('.ai-generated-image, img').forEach(el => el.remove());
+
+    // Convert to plain text
+    let textContent = tempDiv.innerText || tempDiv.textContent;
+
+    // Truncate if too long for mailto (most email clients have ~2000 char limit for URL)
+    const maxLength = 1800;
+    if (textContent.length > maxLength) {
+        textContent = textContent.substring(0, maxLength) + '\n\n...(内容过长，已截断，请查看完整报告)';
+    }
+
+    const subject = encodeURIComponent('CEO专业建议报告 - ' + new Date().toLocaleDateString('zh-CN'));
+    const body = encodeURIComponent(textContent);
+
+    window.open(`mailto:?subject=${subject}&body=${body}`, '_self');
 }
 
 // ============================================
