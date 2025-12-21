@@ -869,6 +869,34 @@ body.light-mode .theme-toggle-btn .moon-icon {
     color: white;
 }
 
+/* Feedback Button Styles */
+.report-actions-divider {
+    width: 1px;
+    height: 32px;
+    background: var(--border-color);
+    margin: 0 0.25rem;
+}
+
+.feedback-btn {
+    padding: 0.625rem 0.75rem;
+}
+
+.feedback-btn:hover {
+    color: var(--primary-color);
+}
+
+.feedback-btn.feedback-active[data-rating="up"] {
+    background: var(--accent-green);
+    border-color: transparent;
+    color: white;
+}
+
+.feedback-btn.feedback-active[data-rating="down"] {
+    background: var(--accent-red);
+    border-color: transparent;
+    color: white;
+}
+
 /* Questions Card Styles */
 .questions-card {
     padding: 1.5rem;

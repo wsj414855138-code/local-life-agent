@@ -21,9 +21,6 @@
         href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github-dark.min.css">
     <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
 
-    <!-- Google Generative AI SDK (UMD version) -->
-    <script src="https://cdn.jsdelivr.net/npm/@anthropic-ai/sdk@0.10.2/dist/web.min.js"></script>
-
     <link rel="stylesheet" href="styles.css">
 </head>
 
@@ -128,11 +125,11 @@
                     </div>
                     <h2>欢迎与CEO对话</h2>
                     <p>我是美团核心本地商业CEO，从产品经理一路走来，对产品、运营、研发、销售、市场营销、商业分析、战略等领域都有深入的理解。</p>
-                    <p>作为到店餐饮创新业务负责人，你可以向我请教任何业务问题。</p>
+                    <p>你可以向我请教任何本地生活业务问题。</p>
                     <div class="example-topics">
                         <span class="example-label">试试这些话题：</span>
                         <div class="example-chips">
-                            <button class="example-chip" data-topic="如何提升到店餐饮的用户复购率？">用户复购</button>
+                            <button class="example-chip" data-topic="如何提升用户复购率？">用户复购</button>
                             <button class="example-chip" data-topic="新业务冷启动有哪些有效策略？">冷启动策略</button>
                             <button class="example-chip" data-topic="如何做好竞品分析和差异化定位？">竞品分析</button>
                         </div>
@@ -206,8 +203,8 @@
                 <div class="form-group" id="manualModelGroup" style="display: none;">
                     <label for="modelSelect">手动选择模型</label>
                     <select id="modelSelect">
-                        <option value="gemini-2.5-flash" selected>Gemini 3 Flash (推荐)</option>
-                        <option value="gemini-2.5-pro">Gemini 3 Pro (最强)</option>
+                        <option value="gemini-3-flash-preview">Gemini 3 Flash (快速)</option>
+                        <option value="gemini-3-pro-preview" selected>Gemini 3 Pro (推荐)</option>
                     </select>
                 </div>
                 <div class="form-group">

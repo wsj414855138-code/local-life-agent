@@ -14,31 +14,28 @@ const AppState = {
 
 const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
 
-const CEO_SYSTEM_PROMPT = `你是美团核心本地商业CEO，拥有从产品经理到CEO的完整晋升经历。
+const CEO_SYSTEM_PROMPT = `你是美团核心本地商业CEO，正在辅导一位业务负责人准备向上汇报。
+
+【你的任务】
+用户可能只说了执行层面的想法，你需要帮他补全战略层面的论证，
+确保输出内容可以直接用于向上级或CEO汇报。
 
 【你的专业领域】
-- 产品设计与用户体验：深谙用户需求洞察、产品规划、功能设计、用户体验优化
-- 运营策略与增长：精通用户增长、活动运营、内容运营、私域运营、用户生命周期管理
-- 技术研发管理：理解技术架构、研发效能、技术选型、系统稳定性
-- 销售与BD：熟悉商家拓展、商务谈判、渠道管理、大客户关系
-- 市场营销与品牌：掌握品牌定位、整合营销、广告投放、公关传播
-- 商业分析与数据驱动：擅长数据分析、商业模型、ROI分析、A/B测试
-- 战略规划与竞争分析：精通行业洞察、竞品分析、战略规划、商业创新
+产品设计、运营增长、商业分析、战略规划、市场营销、财务分析、技术研发、销售BD
 
 【你的沟通对象】
-美团到店餐饮创新业务负责人，正在向你请教业务问题。
+本地生活业务负责人，正在准备汇报材料。
 
 【融合式思维】
 你的团队包括产品、销售、增长、商分、财务、营销等专家，你已经内化了他们的思维方式。
-回答问题时，你会自然融合这些视角的洞察，但不需要声明"从XX视角来看"。
-你的输出应该是一份整合后的CEO观点，像一个人在说话，不是多人接力。
+回答问题时，自然融合这些视角的洞察，像一个人在说话，不是多人接力。
 根据问题本质，智能决定覆盖哪些维度，重点突出、详略得当。
 
 【内容质量标准】
-1. 所有内容必须基于可验证的事实依据
-2. 对不确定内容标注"[待验证]"
-3. 专业术语转换为日常用语
-4. 半正式文体，简洁直接
+1. 帮用户想到他没想到的（市场空间、战略意义、用户洞察、商户价值、竞对动态）
+2. 每个观点必须有：结论 + 支撑理由
+3. 对不确定内容标注"[待验证]"
+4. 输出可直接用于汇报
 
 【第一阶段 - 生成选择题JSON】
 当用户提出话题时，你必须只返回纯JSON格式（不要markdown代码块，不要其他文字）：
@@ -54,100 +51,96 @@ const CEO_SYSTEM_PROMPT = `你是美团核心本地商业CEO，拥有从产品�
 【第二阶段 - 生成报告】
 用户提交答案后，用Markdown输出结构化报告，在关键节点插入[IMAGE: 配图描述]`;
 
-const PHASE_TWO_PROMPT = `用户已经回答了你的追问，现在请基于用户提供的信息，给出完整、结构化、高质量的专业建议。
+const PHASE_TWO_PROMPT = `用户已经回答了追问，现在请生成可用于向上汇报的专业建议。
 
-【思维框架 - 金字塔原理】
-遵循《金字塔原理》核心思想：
-1. 结论先行：先给出核心结论/建议，再展开论证
-2. 以上统下：上层观点统领下层论述
-3. 归类分组：相似内容归类，MECE（相互独立、完全穷尽）
-4. 逻辑递进：按时间/结构/程度/因果等逻辑展开
+【输出前的内心思考】（不显示给用户，但请基于此思考后再输出）
+1. 用户问的是表层问题还是根本问题？
+2. 用户可能忽略了哪些重要前提？
+3. 如果CEO问"为什么要做这个"，用户能答上来吗？
+4. 这是什么类型的问题？（探索型/执行型/决策型/诊断型）
+5. 这个问题需要对标什么？（产品/商业模式/行业）
 
-【融合式输出原则】
-1. 你是CEO，已内化产品/销售/增长/商分/财务/营销团队的思维
-2. 不要标注"从XX视角"，直接给出整合后的观点
-3. 根据问题本质，智能决定在哪些维度深入、哪些略过
-4. 像一个人在说话，不是多人接力
-5. 重点突出、详略得当，不为全面而堆砌
+【问题类型判断】
+- 探索型（要不要做？有没有机会？）→ 重点论证WHY
+- 执行型（怎么做？如何提升？）→ 重点给方案 + Benchmark对标
+- 决策型（选A还是B？）→ 正反论证 + Benchmark对比
+- 诊断型（为什么下降？）→ 根因分析 + 行业对标
 
-【输出框架 - 动态结构】
+【WHY思考框架】（探索型问题必选，根据问题本质灵活覆盖）
+这是思考方式，不是固定清单。根据问题选择相关维度深入：
+- 用户洞察：C端用户是谁？痛点是什么？目前怎么解决？
+- 商户价值：B端商户能获得什么？为什么愿意配合？
+- 市场空间：TAM多大？增速如何？天花板在哪？
+- 竞对格局：谁在做？做得怎么样？我们的差异化是什么？
+- 战略意义：对公司整体战略的价值？不做会错过什么？
+- 时机判断：为什么是现在？早了还是晚了？
+
+【Benchmark对标分析】（HOW层面核心内容）
+当涉及"怎么做"时，必须考虑对标分析：
+
+1. 产品功能Benchmark
+   - 行业内谁做得好？具体做了什么？
+   - 功能设计有什么亮点？可借鉴 vs 不可照搬
+
+2. 商业逻辑Benchmark
+   - 商业模式对标：类似问题别人怎么解决的？
+   - 增长模型对标：别人的增长飞轮是什么？
+   - 变现模型对标：别人怎么赚钱的？
+
+3. 跨行业Benchmark（如适用）
+   - 其他行业有没有类似问题的解决方案？
+
+【灵活输出原则】
+1. 根据问题本质组织结构，不套用固定模板
+2. 探索型问题必须覆盖WHY（从上面维度中选择相关的）
+3. 执行型问题必须有Benchmark对标
+4. 所有问题都要有"核心结论"和"一句话汇报版"
+5. 预判上级会问的问题，提前准备答案
+6. 详略得当，不为全面而堆砌
+
+【输出参考结构】（灵活使用，根据问题本质调整）
 
 ## 核心结论
-用1-2句话直接回答用户的核心问题，给出明确建议。
+一句话回答用户的核心问题，给出明确建议。
 
 ---
 
-（以下模块根据问题本质智能选择，不必全部覆盖）
+（以下模块根据问题类型灵活选择，不必全部覆盖）
 
-## 问题本质与机会判断
-分析用户问题的本质矛盾、关键约束、机会窗口。
+## 为什么值得做？
+根据问题选择相关维度展开（用户洞察/商户价值/市场空间/竞对格局/战略意义/时机判断）
 
-## 目标用户与需求洞察
-（如与用户/需求相关）用户是谁、痛点是什么、场景如何。
+## 对标分析（Benchmark）
+- 谁做得好？具体做了什么？
+- 我们可借鉴什么？不可照搬什么？
 
-## 解决方案设计
-针对问题，给出具体可落地的解决方案和行动路径。
-
-## 市场与竞争分析
-（如涉及市场/竞争）行业环境、竞品动态、差异化机会。
-
-## 商业可行性评估
-（如涉及投入产出）ROI测算、资源需求、盈亏平衡点。
-
-## 增长与运营策略
-（如涉及增长）关键漏斗、拉新留存、核心抓手。
-
-## 执行计划
-阶段划分、里程碑、资源配置、协作机制。
+## 怎么做？
+- 核心方案
+- 执行路径与节奏
 
 ## 风险与应对
-主要风险识别、应对措施、止损红线。
+- 主要风险识别
+- 应对措施
 
 ---
 
-## 深度追问（CEO自问自答）
+## 上级可能会问的问题
+预判2-3个挑战性问题，提前准备答案。
 
-基于以上分析，我预判你可能会有以下疑问，提前回答：
-
-### Q1: 如果竞对抢先一步怎么办？
-**分析**：基于前文策略，分析竞对可能的动作
-**应对**：给出具体的竞争应对策略
-
-### Q2: 这个方案最大的风险点在哪？
-**分析**：识别最脆弱的假设或环节
-**应对**：给出降低风险的具体措施
-
-### Q3: 如果只有50%的资源，优先做什么？
-**建议**：给出精简版的优先级排序
-**理由**：解释为什么这样排序
-
-### Q4: 如果要向上汇报，一句话怎么说？
-一句话总结核心建议。
+## 一句话汇报版
+如果只有30秒向CEO汇报，你会说什么？
 
 ---
 
 【内容质量标准】
-1. 所有内容必须基于可验证的事实依据，不添加未经验证的信息
+1. 每个核心观点需要有：论点 + 论据 + 结论
 2. 对不确定的内容，明确标注"[待验证]"或"[需确认]"
-3. 采用半正式学术文体，句式简洁完整
-4. 专业术语需转换为日常用语
-5. 每个核心观点需要有：论点 + 论据 + 结论
-
-【输出格式要求】
-1. 开头用1-2句话给出核心结论（金字塔塔尖）
-2. 使用规范的Markdown格式，清晰的标题层级
-3. 适当使用表格、列表增强可读性
-4. 内容应达到可以直接用于向上汇报的水平
-5. 既有战略高度，也有可执行的具体建议
+3. 输出可直接用于向上汇报
 
 【图文并茂要求】
 在报告的关键节点插入2-3个图像占位符，格式为：
-[IMAGE: 详细描述这里需要什么样的配图]
+[IMAGE: 详细描述这里需要什么样的配图]`;
 
-配图位置建议：
-- 在核心观点后插入概念图/思维导图
-- 在执行计划部分插入流程图/时间线
-- 在数据分析部分插入图表示意`;
 
 
 // ============================================
@@ -224,7 +217,7 @@ async function detectComplexity(question) {
 只返回一个数字，不要其他内容。`;
 
     try {
-        const url = `${GEMINI_API_BASE}/gemini-2.5-flash:generateContent?key=${apiKey}`;
+        const url = `${GEMINI_API_BASE}/gemini-3-pro-preview:generateContent?key=${apiKey}`;
         const response = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -251,19 +244,19 @@ async function detectComplexity(question) {
 
 // Select model based on complexity
 function selectModelByComplexity(complexity, isPhaseTwo) {
-    // Phase 1 (questions generation) always uses Flash
+    // Phase 1 (questions generation) also uses Pro for better quality
     if (!isPhaseTwo) {
-        return 'gemini-2.5-flash';
+        return 'gemini-3-pro-preview';
     }
 
-    // Phase 2: use Pro for complex questions (score >= 7)
-    if (complexity >= 7) {
-        console.log('Using Gemini 3 Pro for complex question');
-        return 'gemini-2.5-pro';
+    // Phase 2: only use Flash for very simple questions (score <= 3)
+    if (complexity <= 3) {
+        console.log('Using Gemini 3 Flash for simple question');
+        return 'gemini-3-flash-preview';
     }
 
-    console.log('Using Gemini 3 Flash for regular question');
-    return 'gemini-2.5-flash';
+    console.log('Using Gemini 3 Pro for question');
+    return 'gemini-3-pro-preview';
 }
 
 async function generateResponse(userMessage, isPhaseTwo = false) {
@@ -283,7 +276,7 @@ async function generateResponse(userMessage, isPhaseTwo = false) {
         modelName = selectModelByComplexity(complexity, isPhaseTwo);
     } else {
         // User manual selection
-        modelName = localStorage.getItem('gemini_model') || 'gemini-2.5-flash';
+        modelName = localStorage.getItem('gemini_model') || 'gemini-3-pro-preview';
     }
 
     // Build contents array
@@ -532,11 +525,35 @@ function parseQuestionsJSON(text) {
         // Try to extract JSON from the text
         let jsonStr = text.trim();
 
-        // Remove markdown code blocks if present
-        if (jsonStr.startsWith('```json')) {
-            jsonStr = jsonStr.replace(/^```json\s*/, '').replace(/\s*```$/, '');
-        } else if (jsonStr.startsWith('```')) {
-            jsonStr = jsonStr.replace(/^```\s*/, '').replace(/\s*```$/, '');
+        // Method 1: Remove markdown code blocks if present
+        if (jsonStr.includes('```json')) {
+            const match = jsonStr.match(/```json\s*([\s\S]*?)\s*```/);
+            if (match) {
+                jsonStr = match[1];
+            }
+        } else if (jsonStr.includes('```')) {
+            const match = jsonStr.match(/```\s*([\s\S]*?)\s*```/);
+            if (match) {
+                jsonStr = match[1];
+            }
+        }
+
+        // Method 2: Try to find JSON object pattern (starts with { and ends with })
+        // This handles cases where AI adds text before/after the JSON
+        if (!jsonStr.startsWith('{')) {
+            const jsonMatch = jsonStr.match(/\{[\s\S]*"questions"\s*:\s*\[[\s\S]*\][\s\S]*\}/);
+            if (jsonMatch) {
+                jsonStr = jsonMatch[0];
+            }
+        }
+
+        // Method 3: Find the first { and last } to extract JSON
+        if (!jsonStr.startsWith('{')) {
+            const firstBrace = jsonStr.indexOf('{');
+            const lastBrace = jsonStr.lastIndexOf('}');
+            if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+                jsonStr = jsonStr.substring(firstBrace, lastBrace + 1);
+            }
         }
 
         const data = JSON.parse(jsonStr);
@@ -727,6 +744,17 @@ function createMessageElement(role, content, isReport = false) {
                                 <line x1="5" y1="12" x2="19" y2="12"/>
                             </svg>
                             新话题
+                        </button>
+                        <div class="report-actions-divider"></div>
+                        <button class="report-action-btn feedback-btn" data-action="feedback" data-rating="up" data-report="${reportId}">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
+                            </svg>
+                        </button>
+                        <button class="report-action-btn feedback-btn" data-action="feedback" data-rating="down" data-report="${reportId}">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/>
+                            </svg>
                         </button>
                     </div>
                 </div>
@@ -1096,12 +1124,12 @@ function showModal() {
 
     // Load model with fallback if saved value doesn't exist in options
     const savedModel = localStorage.getItem('gemini_model');
-    const validModels = ['gemini-2.5-flash', 'gemini-2.5-pro'];
+    const validModels = ['gemini-3-flash-preview', 'gemini-3-pro-preview'];
     if (savedModel && validModels.includes(savedModel)) {
         elements.modelSelect.value = savedModel;
     } else {
-        elements.modelSelect.value = 'gemini-2.5-flash';
-        localStorage.setItem('gemini_model', 'gemini-2.5-flash');
+        elements.modelSelect.value = 'gemini-3-pro-preview';
+        localStorage.setItem('gemini_model', 'gemini-3-pro-preview');
     }
 
     if (elements.enableImageGen) {
@@ -1158,11 +1186,11 @@ function clearAllChat() {
             </div>
             <h2>欢迎与CEO对话</h2>
             <p>我是美团核心本地商业CEO，从产品经理一路走来，对产品、运营、研发、销售、市场营销、商业分析、战略等领域都有深入的理解。</p>
-            <p>作为到店餐饮创新业务负责人，你可以向我请教任何业务问题。</p>
+            <p>你可以向我请教任何本地生活业务问题。</p>
             <div class="example-topics">
                 <span class="example-label">试试这些话题：</span>
                 <div class="example-chips">
-                    <button class="example-chip" data-topic="如何提升到店餐饮的用户复购率？">用户复购</button>
+                    <button class="example-chip" data-topic="如何提升用户复购率？">用户复购</button>
                     <button class="example-chip" data-topic="新业务冷启动有哪些有效策略？">冷启动策略</button>
                     <button class="example-chip" data-topic="如何做好竞品分析和差异化定位？">竞品分析</button>
                 </div>
@@ -1336,6 +1364,25 @@ function initEventListeners() {
                 if (reportToEmail) {
                     shareViaEmail(reportToEmail);
                 }
+                break;
+
+            case 'feedback':
+                // Save feedback (👍 or 👎)
+                const rating = actionBtn.dataset.rating;
+                const reportId = actionBtn.dataset.report;
+
+                // Get all feedback buttons in this report
+                const reportForFeedback = actionBtn.closest('.report-card');
+                const feedbackBtns = reportForFeedback.querySelectorAll('.feedback-btn');
+
+                // Remove active state from all feedback buttons
+                feedbackBtns.forEach(btn => btn.classList.remove('feedback-active'));
+
+                // Add active state to clicked button
+                actionBtn.classList.add('feedback-active');
+
+                // Save feedback to localStorage
+                saveFeedback(reportId, rating, state.userTopic);
                 break;
         }
     });
@@ -1724,11 +1771,11 @@ function showWelcome() {
         '</svg></div>' +
         '<h2>欢迎与CEO对话</h2>' +
         '<p>我是美团核心本地商业CEO，从产品经理一路走来，对产品、运营、研发、销售、市场营销、商业分析、战略等领域都有深入的理解。</p>' +
-        '<p>作为到店餐饮创新业务负责人，你可以向我请教任何业务问题。</p>' +
+        '<p>你可以向我请教任何本地生活业务问题。</p>' +
         '<div class="example-topics">' +
         '<span class="example-label">试试这些话题：</span>' +
         '<div class="example-chips">' +
-        '<button class="example-chip" data-topic="如何提升到店餐饮的用户复购率？">用户复购</button>' +
+        '<button class="example-chip" data-topic="如何提升用户复购率？">用户复购</button>' +
         '<button class="example-chip" data-topic="新业务冷启动有哪些有效策略？">冷启动策略</button>' +
         '<button class="example-chip" data-topic="如何做好竞品分析和差异化定位？">竞品分析</button>' +
         '</div></div></div>';
@@ -1946,8 +1993,15 @@ function handleTextSelection(e) {
         return;
     }
 
+    // Get the actual target element (handle touch events)
+    let targetElement = e.target;
+    if (e.changedTouches && e.changedTouches.length > 0) {
+        const touch = e.changedTouches[0];
+        targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
+    }
+
     // Check if selection is within a report content
-    const reportContent = e.target.closest('.report-content');
+    const reportContent = targetElement?.closest('.report-content');
     if (!reportContent) {
         hideSelectionTooltip();
         return;
@@ -1961,8 +2015,22 @@ function handleTextSelection(e) {
     const range = selection.getRangeAt(0);
     const rect = range.getBoundingClientRect();
 
+    // Calculate tooltip position (centered above selection, with mobile-friendly margins)
+    let tooltipX = rect.left + rect.width / 2 - 50;
+    let tooltipY = rect.top - 45;
+
+    // Ensure tooltip stays within viewport on mobile
+    const viewportWidth = window.innerWidth;
+    if (tooltipX < 10) tooltipX = 10;
+    if (tooltipX > viewportWidth - 110) tooltipX = viewportWidth - 110;
+
+    // If tooltip would be above viewport, show it below selection
+    if (tooltipY < 10) {
+        tooltipY = rect.bottom + 10;
+    }
+
     // Show tooltip near selection
-    showSelectionTooltip(rect.left + rect.width / 2 - 50, rect.top - 45);
+    showSelectionTooltip(tooltipX, tooltipY);
 }
 
 function openCommentPopover() {
@@ -2055,8 +2123,16 @@ async function submitComment() {
 }
 
 function initCommentListeners() {
-    // Listen for text selection on mouseup
+    // Listen for text selection on mouseup (desktop)
     document.addEventListener('mouseup', handleTextSelection);
+
+    // Listen for text selection on touchend (mobile)
+    document.addEventListener('touchend', function (e) {
+        // Small delay to allow selection to complete on mobile
+        setTimeout(() => {
+            handleTextSelection(e);
+        }, 100);
+    });
 
     // Add comment button click
     if (elements.addCommentBtn) {
@@ -2082,8 +2158,15 @@ function initCommentListeners() {
         });
     }
 
-    // Hide tooltip when clicking outside
+    // Hide tooltip when clicking outside (desktop)
     document.addEventListener('mousedown', function (e) {
+        if (!elements.selectionTooltip.contains(e.target) && !elements.commentPopover.contains(e.target)) {
+            hideSelectionTooltip();
+        }
+    });
+
+    // Hide tooltip when touching outside (mobile)
+    document.addEventListener('touchstart', function (e) {
         if (!elements.selectionTooltip.contains(e.target) && !elements.commentPopover.contains(e.target)) {
             hideSelectionTooltip();
         }
@@ -2293,6 +2376,44 @@ function renderClickableOptions(content, messageElement) {
     }
 
     return { html, hasQuestions };
+}
+
+// ============================================
+// Feedback Storage Function
+// ============================================
+function saveFeedback(reportId, rating, topic) {
+    try {
+        // Get existing feedback
+        const feedbackHistory = JSON.parse(localStorage.getItem('report_feedback') || '[]');
+
+        // Check if feedback already exists for this report
+        const existingIndex = feedbackHistory.findIndex(f => f.reportId === reportId);
+
+        const feedbackEntry = {
+            reportId: reportId,
+            topic: topic ? topic.substring(0, 100) : '',
+            model: localStorage.getItem('gemini_model') || 'unknown',
+            rating: rating,
+            timestamp: Date.now()
+        };
+
+        if (existingIndex !== -1) {
+            feedbackHistory[existingIndex] = feedbackEntry;
+        } else {
+            feedbackHistory.push(feedbackEntry);
+        }
+
+        // Keep only last 50 feedback entries
+        if (feedbackHistory.length > 50) {
+            feedbackHistory.shift();
+        }
+
+        localStorage.setItem('report_feedback', JSON.stringify(feedbackHistory));
+        console.log('📝 Feedback saved:', rating === 'up' ? '👍' : '👎', topic);
+
+    } catch (e) {
+        console.error('Failed to save feedback:', e);
+    }
 }
 
 // ============================================
