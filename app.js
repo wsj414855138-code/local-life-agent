@@ -14,133 +14,382 @@ const AppState = {
 
 const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
 
-const CEO_SYSTEM_PROMPT = `你是美团核心本地商业CEO，正在辅导一位业务负责人准备向上汇报。
+const CEO_SYSTEM_PROMPT = `你是美团核心本地商业CEO，同时也是一位全能型顾问，擅长各类问题的分析与解答。
 
 【你的任务】
-用户可能只说了执行层面的想法，你需要帮他补全战略层面的论证，
-确保输出内容可以直接用于向上级或CEO汇报。
+根据用户提出的问题类型，提供专业、有价值的回答。
+- 如果是汇报型问题：帮用户补全战略层论证，确保可直接用于向上汇报
+- 如果是其他类型问题：根据问题本质提供专业解答
 
 【你的专业领域】
-产品设计、运营增长、商业分析、战略规划、市场营销、财务分析、技术研发、销售BD
-
-【你的沟通对象】
-本地生活业务负责人，正在准备汇报材料。
+产品设计、运营增长、商业分析、战略规划、市场营销、财务分析、技术研发、销售BD、
+团队管理、行业研究、概念科普、创意策划
 
 【融合式思维】
-你的团队包括产品、销售、增长、商分、财务、营销等专家，你已经内化了他们的思维方式。
+你的团队包括产品、销售、增长、商分、财务、营销、HR等专家，你已经内化了他们的思维方式。
 回答问题时，自然融合这些视角的洞察，像一个人在说话，不是多人接力。
 根据问题本质，智能决定覆盖哪些维度，重点突出、详略得当。
 
 【内容质量标准】
-1. 帮用户想到他没想到的（市场空间、战略意义、用户洞察、商户价值、竞对动态）
+1. 帮用户想到他没想到的
 2. 每个观点必须有：结论 + 支撑理由
 3. 对不确定内容标注"[待验证]"
-4. 输出可直接用于汇报
+4. 根据问题类型调整输出详略
 
-【第一阶段 - 生成选择题JSON】
-当用户提出话题时，你必须只返回纯JSON格式（不要markdown代码块，不要其他文字）：
+【第一阶段 - 问题类型判断与生成选择题JSON】
+当用户提出话题时，先判断问题类型，然后返回纯JSON格式（不要markdown代码块，不要其他文字）：
 
-{"intro":"简短开场白","questions":[{"id":"q1","title":"问题标题","type":"multiple","options":[{"key":"A","text":"选项"},{"key":"B","text":"选项"},{"key":"other","text":"其它","hasInput":true}]}],"supplement":{"label":"补充信息","placeholder":"请补充背景"}}
+**问题类型判断标准：**
+1. **汇报型**：涉及战略决策、业务方向、要不要做某事、怎么提升指标等
+   - 探索型：要不要做？有没有机会？
+   - 执行型：怎么做？如何提升？
+   - 决策型：选A还是B？
+   - 诊断型：为什么下降？出了什么问题？
 
-要求：
-1. 生成4-5个问题，覆盖业务阶段、核心瓶颈、细分场景、考核指标
+2. **调研型**：需要信息收集、行业分析、市场调查等
+   - 例：外卖行业现状、竞品分析、用户画像研究
+
+3. **管理型**：涉及团队管理、组织协作、人员激励等
+   - 例：团队士气低、跨部门协作、绩效考核
+
+4. **科普型**：概念解释、知识普及、学习理解
+   - 例：什么是私域流量、GMV怎么计算
+
+5. **创意型**：需要创意发散、方案头脑风暴
+   - 例：营销创意、活动策划、新玩法
+
+**JSON格式示例：**
+{
+  "questionType": "汇报型",
+  "intro": "简短开场白",
+  "questions": [
+    {
+      "id": "q1",
+      "title": "问题标题（中文）",
+      "type": "multiple",
+      "options": [
+        {"key": "A", "text": "选项内容（中文）"},
+        {"key": "B", "text": "选项内容（中文）"},
+        {"key": "C", "text": "其它", "hasInput": true}
+      ]
+    }
+  ],
+  "supplement": {"label": "补充说明", "placeholder": "请输入"}
+}
+
+**不同类型的追问设计：**
+
+汇报型追问（4-5个问题）：
+- 业务阶段、核心瓶颈、细分场景、考核指标、资源情况
+
+调研型追问（3-4个问题）：
+- 调研范围（行业/竞品/用户）、关注重点、产出形式（报告/PPT/口头汇报）、时间要求
+
+管理型追问（3-4个问题）：
+- 团队规模与构成、问题具体表现、已尝试的方法、期望的结果
+
+科普型追问（2-3个问题）：
+- 当前了解程度、应用场景、期望了解的深度
+
+创意型追问（3-4个问题）：
+- 目标用户、预算范围、参考案例偏好、创意方向
+
+**【关键要求】**
+1. 根据问题类型生成对应的追问
 2. type都设为multiple支持多选
-3. 每个问题最后一个选项是其它(key为other,hasInput为true)
+3. 每个问题最后一个选项是其它(key为字母如"E"或"F", text为"其它", hasInput为true)
 4. 只输出JSON，不要任何其他文字
+5. key必须是大写字母(A/B/C/D/E...)，不能是英文单词！
+6. text必须是中文描述，禁止使用英文单词！
+   - 错误示例：{"key": "small", "text": "small"}
+   - 正确示例：{"key": "A", "text": "小型团队(5人以下)"}
 
 【第二阶段 - 生成报告】
-用户提交答案后，用Markdown输出结构化报告，在关键节点插入[IMAGE: 配图描述]`;
+用户提交答案后，根据问题类型用Markdown输出对应结构的报告，在关键节点插入[IMAGE: 配图描述]`;
 
-const PHASE_TWO_PROMPT = `用户已经回答了追问，现在请生成可用于向上汇报的专业建议。
+const PHASE_TWO_PROMPT = `用户已经回答了追问，现在请根据问题类型生成专业回答。
 
-【输出前的内心思考】（不显示给用户，但请基于此思考后再输出）
+【首先判断问题类型】
+根据用户的原始问题和追问答案，判断这是哪种类型的问题：
+- 汇报型：战略决策、业务方向、指标提升 → 输出可用于向上汇报的内容
+- 调研型：信息收集、行业分析 → 输出调研报告
+- 管理型：团队管理、组织协作 → 输出管理建议
+- 科普型：概念解释、知识普及 → 输出通俗易懂的解释
+- 创意型：创意发散、方案策划 → 输出创意方案列表
+
+===== 汇报型问题的输出框架 =====
+
+【输出前的内心思考】（不显示给用户）
 1. 用户问的是表层问题还是根本问题？
-2. 用户可能忽略了哪些重要前提？
-3. 如果CEO问"为什么要做这个"，用户能答上来吗？
-4. 这是什么类型的问题？（探索型/执行型/决策型/诊断型）
-5. 这个问题需要对标什么？（产品/商业模式/行业）
+2. 如果CEO问"为什么要做这个"，用户能答上来吗？
+3. 这是探索型/执行型/决策型/诊断型中的哪种？
 
-【问题类型判断】
-- 探索型（要不要做？有没有机会？）→ 重点论证WHY
-- 执行型（怎么做？如何提升？）→ 重点给方案 + Benchmark对标
-- 决策型（选A还是B？）→ 正反论证 + Benchmark对比
-- 诊断型（为什么下降？）→ 根因分析 + 行业对标
+【问题类型对应输出重点】
+- 探索型 → WHY论证（用户洞察/市场空间/战略意义/时机判断）
+- 执行型 → 方案 + Benchmark对标
+- 决策型 → 正反论证 + 对比分析
+- 诊断型 → 根因分析 + 行业对标
 
-【WHY思考框架】（探索型问题必选，根据问题本质灵活覆盖）
-这是思考方式，不是固定清单。根据问题选择相关维度深入：
-- 用户洞察：C端用户是谁？痛点是什么？目前怎么解决？
-- 商户价值：B端商户能获得什么？为什么愿意配合？
-- 市场空间：TAM多大？增速如何？天花板在哪？
-- 竞对格局：谁在做？做得怎么样？我们的差异化是什么？
-- 战略意义：对公司整体战略的价值？不做会错过什么？
-- 时机判断：为什么是现在？早了还是晚了？
-
-【Benchmark对标分析】（HOW层面核心内容）
-当涉及"怎么做"时，必须考虑对标分析：
-
-1. 产品功能Benchmark
-   - 行业内谁做得好？具体做了什么？
-   - 功能设计有什么亮点？可借鉴 vs 不可照搬
-
-2. 商业逻辑Benchmark
-   - 商业模式对标：类似问题别人怎么解决的？
-   - 增长模型对标：别人的增长飞轮是什么？
-   - 变现模型对标：别人怎么赚钱的？
-
-3. 跨行业Benchmark（如适用）
-   - 其他行业有没有类似问题的解决方案？
-
-【灵活输出原则】
-1. 根据问题本质组织结构，不套用固定模板
-2. 探索型问题必须覆盖WHY（从上面维度中选择相关的）
-3. 执行型问题必须有Benchmark对标
-4. 所有问题都要有"核心结论"和"一句话汇报版"
-5. 预判上级会问的问题，提前准备答案
-6. 详略得当，不为全面而堆砌
-
-【输出参考结构】（灵活使用，根据问题本质调整）
-
+【输出结构】
 ## 核心结论
-一句话回答用户的核心问题，给出明确建议。
-
----
-
-（以下模块根据问题类型灵活选择，不必全部覆盖）
-
-## 为什么值得做？
-根据问题选择相关维度展开（用户洞察/商户价值/市场空间/竞对格局/战略意义/时机判断）
-
-## 对标分析（Benchmark）
-- 谁做得好？具体做了什么？
-- 我们可借鉴什么？不可照搬什么？
-
-## 怎么做？
-- 核心方案
-- 执行路径与节奏
-
-## 风险与应对
-- 主要风险识别
-- 应对措施
-
----
-
+## 详细分析（根据类型选择模块）
 ## 上级可能会问的问题
-预判2-3个挑战性问题，提前准备答案。
-
 ## 一句话汇报版
-如果只有30秒向CEO汇报，你会说什么？
 
----
+===== 调研型问题的输出框架 =====
 
-【内容质量标准】
-1. 每个核心观点需要有：论点 + 论据 + 结论
-2. 对不确定的内容，明确标注"[待验证]"或"[需确认]"
-3. 输出可直接用于向上汇报
+【输出结构】
+## 调研结论摘要
+## 行业/市场概况
+## 关键数据与趋势
+## 主要玩家分析
+## 洞察与启示
+## 信息来源说明（标注[待验证]的数据）
 
-【图文并茂要求】
-在报告的关键节点插入2-3个图像占位符，格式为：
-[IMAGE: 详细描述这里需要什么样的配图]`;
+===== 管理型问题的输出框架 =====
 
+【输出结构】
+## 问题诊断
+## 根因分析
+## 解决方案建议
+## 落地执行步骤
+## 预期效果与衡量指标
+## 可能遇到的阻力与应对
+
+===== 科普型问题的输出框架 =====
+
+【输出结构】
+## 一句话解释
+## 详细说明
+## 实际案例
+## 常见误区
+## 延伸阅读建议（可选）
+
+===== 创意型问题的输出框架 =====
+
+【输出结构】
+## 创意方向概述
+## 方案列表（3-5个创意方案，每个包含：名称、核心玩法、预期效果、执行难度）
+## 推荐方案及理由
+## 执行要点
+
+===== 通用要求 =====
+
+1. 根据问题类型选择对应框架，不要生搬硬套
+2. 每个观点：论点 + 论据 + 结论
+3. 不确定内容标注"[待验证]"
+4. 在关键节点插入2-3个图像占位符：[IMAGE: 配图描述]
+5. 详略得当，科普型可以更简洁，汇报型需要更完整`;
+
+
+// ============================================
+// Image Manager Class
+// ============================================
+class ImageManager {
+    constructor(options) {
+        this.container = options.container;      // Preview area container
+        this.fileInput = options.fileInput;      // File input element
+        this.pasteTarget = options.pasteTarget;  // Element to listen for paste events
+        this.maxImages = options.maxImages || 10;
+        this.maxSize = options.maxSize || 7 * 1024 * 1024; // 7MB per image
+        this.images = [];  // { file, base64, mimeType, id }
+        this.onUpdate = options.onUpdate || null; // Callback when images change
+
+        this.init();
+    }
+
+    init() {
+        // File input change event
+        if (this.fileInput) {
+            this.fileInput.addEventListener('change', (e) => this.handleFileSelect(e));
+        }
+
+        // Paste event on target element
+        if (this.pasteTarget) {
+            this.pasteTarget.addEventListener('paste', (e) => this.handlePaste(e));
+        }
+    }
+
+    async handleFileSelect(event) {
+        const files = Array.from(event.target.files);
+        for (const file of files) {
+            await this.addImage(file);
+        }
+        // Clear the input to allow re-selecting the same file
+        event.target.value = '';
+    }
+
+    async handlePaste(event) {
+        const items = event.clipboardData?.items;
+        if (!items) return;
+
+        for (const item of items) {
+            if (item.type.startsWith('image/')) {
+                event.preventDefault();
+                const file = item.getAsFile();
+                if (file) {
+                    await this.addImage(file);
+                }
+            }
+        }
+    }
+
+    async addImage(file) {
+        // Check file type
+        const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        if (!validTypes.includes(file.type)) {
+            alert('不支持的图片格式，请使用 JPEG、PNG、GIF 或 WebP');
+            return false;
+        }
+
+        // Check file size
+        if (file.size > this.maxSize) {
+            alert(`图片大小不能超过 ${Math.round(this.maxSize / 1024 / 1024)}MB`);
+            return false;
+        }
+
+        // Check max images
+        if (this.images.length >= this.maxImages) {
+            alert(`最多只能上传 ${this.maxImages} 张图片`);
+            return false;
+        }
+
+        // Convert to base64
+        const base64 = await this.fileToBase64(file);
+
+        const imageData = {
+            id: 'img_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+            file: file,
+            base64: base64,
+            mimeType: file.type
+        };
+
+        this.images.push(imageData);
+        this.renderPreview();
+
+        if (this.onUpdate) {
+            this.onUpdate(this.images);
+        }
+
+        return true;
+    }
+
+    fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+                // Remove the data URL prefix (e.g., "data:image/png;base64,")
+                const base64 = reader.result.split(',')[1];
+                resolve(base64);
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+
+    removeImage(id) {
+        this.images = this.images.filter(img => img.id !== id);
+        this.renderPreview();
+
+        if (this.onUpdate) {
+            this.onUpdate(this.images);
+        }
+    }
+
+    renderPreview() {
+        if (!this.container) return;
+
+        if (this.images.length === 0) {
+            this.container.classList.remove('has-images');
+            this.container.innerHTML = '';
+            return;
+        }
+
+        this.container.classList.add('has-images');
+
+        let html = '';
+        this.images.forEach(img => {
+            html += `
+                <div class="image-thumbnail" data-id="${img.id}">
+                    <img src="data:${img.mimeType};base64,${img.base64}" alt="预览">
+                    <button class="image-thumbnail-delete" data-id="${img.id}" title="删除">×</button>
+                </div>
+            `;
+        });
+
+        // Add count indicator if multiple images
+        if (this.images.length > 1) {
+            html += `<div class="image-count-indicator">${this.images.length}/${this.maxImages}</div>`;
+        }
+
+        this.container.innerHTML = html;
+
+        // Bind delete button events
+        this.container.querySelectorAll('.image-thumbnail-delete').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.removeImage(btn.dataset.id);
+            });
+        });
+
+        // Bind click to enlarge (lightbox)
+        this.container.querySelectorAll('.image-thumbnail img').forEach(img => {
+            img.addEventListener('click', () => {
+                this.showLightbox(img.src);
+            });
+        });
+    }
+
+    showLightbox(src) {
+        const lightbox = document.createElement('div');
+        lightbox.className = 'image-lightbox';
+        lightbox.innerHTML = `<img src="${src}" alt="预览">`;
+        lightbox.addEventListener('click', () => lightbox.remove());
+        document.body.appendChild(lightbox);
+    }
+
+    // Get image parts for Gemini API
+    getImageParts() {
+        return this.images.map(img => ({
+            inlineData: {
+                mimeType: img.mimeType,
+                data: img.base64
+            }
+        }));
+    }
+
+    // Get images for storage (save in history)
+    getImagesForStorage() {
+        return this.images.map(img => ({
+            mimeType: img.mimeType,
+            data: img.base64
+        }));
+    }
+
+    // Check if there are any images
+    hasImages() {
+        return this.images.length > 0;
+    }
+
+    // Get image count
+    getCount() {
+        return this.images.length;
+    }
+
+    // Clear all images
+    clear() {
+        this.images = [];
+        this.renderPreview();
+
+        if (this.onUpdate) {
+            this.onUpdate(this.images);
+        }
+    }
+}
+
+// Image manager instances (will be initialized in init())
+let mainImageManager = null;
+let commentImageManager = null;
 
 
 // ============================================
@@ -182,7 +431,14 @@ const elements = {
     submitCommentBtn: document.getElementById('submitCommentBtn'),
     logoHomeBtn: document.getElementById('logoHomeBtn'),
     inputContainer: document.querySelector('.input-container'),
-    enableSearch: document.getElementById('enableSearch')
+    enableSearch: document.getElementById('enableSearch'),
+    // Image upload elements
+    mainImagePreview: document.getElementById('mainImagePreview'),
+    uploadImageBtn: document.getElementById('uploadImageBtn'),
+    imageFileInput: document.getElementById('imageFileInput'),
+    commentImagePreview: document.getElementById('commentImagePreview'),
+    commentUploadBtn: document.getElementById('commentUploadBtn'),
+    commentImageInput: document.getElementById('commentImageInput')
 };
 
 // ============================================
@@ -259,7 +515,7 @@ function selectModelByComplexity(complexity, isPhaseTwo) {
     return 'gemini-3-pro-preview';
 }
 
-async function generateResponse(userMessage, isPhaseTwo = false) {
+async function generateResponse(userMessage, isPhaseTwo = false, imageParts = []) {
     const apiKey = localStorage.getItem('gemini_api_key');
     const enableSearch = localStorage.getItem('enable_search') !== 'false';
     const autoModelSelect = localStorage.getItem('auto_model_select') !== 'false';
@@ -284,20 +540,39 @@ async function generateResponse(userMessage, isPhaseTwo = false) {
 
     // Add conversation history
     for (const msg of state.conversationHistory) {
+        const parts = [{ text: msg.content }];
+        // Include images from history if available
+        if (msg.images && msg.images.length > 0) {
+            for (const img of msg.images) {
+                parts.push({
+                    inlineData: {
+                        mimeType: img.mimeType,
+                        data: img.data
+                    }
+                });
+            }
+        }
         contents.push({
             role: msg.role === 'user' ? 'user' : 'model',
-            parts: [{ text: msg.content }]
+            parts: parts
         });
     }
 
-    // Add current message
+    // Add current message with images
     let prompt = userMessage;
     if (isPhaseTwo) {
         prompt = `${userMessage}\n\n---\n${PHASE_TWO_PROMPT}`;
     }
+
+    // Build parts array: text first, then images
+    const currentParts = [{ text: prompt }];
+    if (imageParts && imageParts.length > 0) {
+        currentParts.push(...imageParts);
+    }
+
     contents.push({
         role: 'user',
-        parts: [{ text: prompt }]
+        parts: currentParts
     });
 
     const url = `${GEMINI_API_BASE}/${modelName}:streamGenerateContent?key=${apiKey}&alt=sse`;
@@ -513,8 +788,8 @@ async function processImagesInContent(contentElement, fullText) {
         );
     }
 
-    // Wait for all images to complete before returning
-    await Promise.all(imagePromises);
+    // Wait for all images to complete before returning (use allSettled to prevent failures from blocking)
+    await Promise.allSettled(imagePromises);
 }
 
 // ============================================
@@ -762,16 +1037,36 @@ function createMessageElement(role, content, isReport = false) {
             </div>
         `;
     } else {
+        // Build images HTML if present
+        let userImagesHtml = '';
+        if (role === 'user' && arguments[3] && arguments[3].length > 0) {
+            const userImages = arguments[3];
+            userImagesHtml = '<div class="user-images">';
+            userImages.forEach(img => {
+                userImagesHtml += `<img src="data:${img.mimeType};base64,${img.data}" alt="用户上传图片" onclick="showImageLightbox(this.src)">`;
+            });
+            userImagesHtml += '</div>';
+        }
+
         messageDiv.innerHTML = `
             <div class="message-avatar">${avatarIcon}</div>
             <div class="message-content">
-                <div class="message-bubble">${role === 'ai' ? '' : escapeHtml(content)}</div>
+                <div class="message-bubble">${role === 'ai' ? '' : escapeHtml(content)}${userImagesHtml}</div>
                 <div class="message-time">${formatTime()}</div>
             </div>
         `;
     }
 
     return messageDiv;
+}
+
+// Helper function for image lightbox
+function showImageLightbox(src) {
+    const lightbox = document.createElement('div');
+    lightbox.className = 'image-lightbox';
+    lightbox.innerHTML = `<img src="${src}" alt="预览">`;
+    lightbox.addEventListener('click', () => lightbox.remove());
+    document.body.appendChild(lightbox);
 }
 
 function addTypingIndicator() {
@@ -941,7 +1236,7 @@ async function submitQuestionsAnswers(cardElement) {
 // Message Handling
 // ============================================
 async function handleUserMessage(message) {
-    if (!message.trim()) return;
+    if (!message.trim() && (!mainImageManager || !mainImageManager.hasImages())) return;
 
     // Check API key
     if (!localStorage.getItem('gemini_api_key')) {
@@ -951,18 +1246,29 @@ async function handleUserMessage(message) {
 
     hideWelcome();
 
-    // Add user message to UI
-    const userMsgElement = createMessageElement('user', message);
+    // Get images from ImageManager
+    const imageParts = mainImageManager ? mainImageManager.getImageParts() : [];
+    const imagesForStorage = mainImageManager ? mainImageManager.getImagesForStorage() : [];
+
+    // Add user message to UI (with images)
+    const userMsgElement = createMessageElement('user', message, false, imagesForStorage);
     elements.chatMessages.appendChild(userMsgElement);
     scrollToBottom();
 
-    // Add to history
-    state.conversationHistory.push({ role: 'user', content: message });
+    // Add to history (with images for context)
+    state.conversationHistory.push({
+        role: 'user',
+        content: message,
+        images: imagesForStorage
+    });
 
-    // Clear input
+    // Clear input and images
     elements.userInput.value = '';
     elements.userInput.style.height = 'auto';
     elements.sendBtn.disabled = true;
+    if (mainImageManager) {
+        mainImageManager.clear();
+    }
 
     // Determine if this is phase two
     const isPhaseTwo = state.currentState === AppState.CLARIFYING;
@@ -980,8 +1286,11 @@ async function handleUserMessage(message) {
     addTypingIndicator();
 
     try {
-        // Generate response
-        const response = await generateResponse(message, isPhaseTwo);
+        // Record start time for statistics
+        const startTime = Date.now();
+
+        // Generate response (with images)
+        const response = await generateResponse(message, isPhaseTwo, imageParts);
 
         // Remove typing indicator
         removeTypingIndicator();
@@ -1064,6 +1373,21 @@ async function handleUserMessage(message) {
                 hljs.highlightElement(block);
             });
             await processImagesInContent(contentElement, fullResponse);
+
+            // Add statistics at the end of report
+            const endTime = Date.now();
+            const elapsedSeconds = Math.round((endTime - startTime) / 1000);
+            const minutes = Math.floor(elapsedSeconds / 60);
+            const seconds = elapsedSeconds % 60;
+            const timeStr = minutes > 0 ? `${minutes}分${seconds}秒` : `${seconds}秒`;
+            const charCount = fullResponse.replace(/\s/g, '').length;
+
+            const statsHtml = `
+                <div class="report-statistics">
+                    <span>📊 共 ${charCount} 字，思考时间 ${timeStr}</span>
+                </div>
+            `;
+            contentElement.insertAdjacentHTML('beforeend', statsHtml);
 
             state.currentState = AppState.IDLE;
             state.conversationHistory = [];
@@ -1982,6 +2306,10 @@ function hideCommentPopover() {
     elements.commentPopover.style.display = 'none';
     elements.commentInput.value = '';
     state.currentSelectedText = '';
+    // Clear comment images
+    if (commentImageManager) {
+        commentImageManager.clear();
+    }
 }
 
 function handleTextSelection(e) {
@@ -2049,21 +2377,41 @@ function openCommentPopover() {
 
 async function submitComment() {
     const question = elements.commentInput.value.trim();
-    if (!question || !state.currentSelectedText) return;
+    if ((!question && (!commentImageManager || !commentImageManager.hasImages())) || !state.currentSelectedText) return;
 
     const selectedText = state.currentSelectedText;
     const reportElement = state.currentReportElement;
+
+    // Get images from comment ImageManager
+    const imageParts = commentImageManager ? commentImageManager.getImageParts() : [];
 
     // Disable submit button
     elements.submitCommentBtn.disabled = true;
     elements.submitCommentBtn.innerHTML = '<div class="mini-spinner"></div> 思考中...';
 
     try {
-        // Build context for AI
-        const contextPrompt = '用户在阅读报告时，选中了以下内容：\n\n"' + selectedText + '"\n\n用户的追问是：' + question + '\n\n请针对选中内容和用户问题，给出简洁、专业的回答。回答应该直接切入主题，不要重复引用选中内容。';
+        // Record start time for statistics
+        const startTime = Date.now();
 
-        // Generate response
-        const response = await generateResponse(contextPrompt, false);
+        // Build context for AI - 简洁版 prompt
+        let contextPrompt = `用户在阅读报告时，选中了以下内容：
+
+"${selectedText}"
+
+用户的追问是：${question}
+
+【重要】请用简洁的方式回答，控制在50-100字以内。
+- 直接切入主题，不要寒暄
+- 不要重复引用选中内容
+- 如果问题简单，一两句话回答即可
+- 避免使用列表，用简洁的段落`;
+
+        if (imageParts.length > 0) {
+            contextPrompt += '\n\n（用户还附带了 ' + imageParts.length + ' 张图片供参考，请结合图片内容分析）';
+        }
+
+        // Use Flash model for quick response
+        const response = await generateCommentResponse(contextPrompt, imageParts);
 
         let fullResponse = '';
         for await (const text of streamResponse(response)) {
@@ -2079,31 +2427,51 @@ async function submitComment() {
                 reportElement.querySelector('.report-content').appendChild(followupSection);
             }
 
-            const commentHtml = '<div class="followup-comment">' +
-                '<div class="followup-comment-quote">' + escapeHtml(selectedText.substring(0, 100)) + (selectedText.length > 100 ? '...' : '') + '</div>' +
-                '<div class="followup-comment-question">💬 ' + escapeHtml(question) + '</div>' +
-                '<div class="followup-comment-answer">' + marked.parse(fullResponse) + '</div>' +
-                '</div>';
+            // Generate unique ID for this comment
+            const commentId = 'comment-' + Date.now();
+
+            // Calculate stats
+            const endTime = Date.now();
+            const elapsedSeconds = Math.round((endTime - startTime) / 1000);
+            const minutes = Math.floor(elapsedSeconds / 60);
+            const seconds = elapsedSeconds % 60;
+            const timeStr = minutes > 0 ? `${minutes}分${seconds}秒` : `${seconds}秒`;
+            const charCount = fullResponse.replace(/\s/g, '').length;
+
+            const commentHtml = `<div class="followup-comment" id="${commentId}">
+                <div class="followup-comment-quote">${escapeHtml(selectedText.substring(0, 100))}${selectedText.length > 100 ? '...' : ''}</div>
+                <div class="followup-comment-question">💬 ${escapeHtml(question)}</div>
+                <div class="followup-comment-answer">${marked.parse(fullResponse)}</div>
+                <div class="comment-footer">
+                    <span class="comment-statistics">📊 共 ${charCount} 字，思考时间 ${timeStr}</span>
+                    <button class="deep-dive-btn" data-comment-id="${commentId}" data-selected-text="${escapeHtml(selectedText)}" data-question="${escapeHtml(question)}">
+                        🔍 深入了解
+                    </button>
+                </div>
+            </div>`;
 
             followupSection.insertAdjacentHTML('beforeend', commentHtml);
 
-            // Get the newly added comment element and process images in it
-            const newComment = followupSection.lastElementChild;
+            // Bind deep dive button event
+            const newComment = document.getElementById(commentId);
+            const deepDiveBtn = newComment.querySelector('.deep-dive-btn');
+            if (deepDiveBtn) {
+                deepDiveBtn.addEventListener('click', handleDeepDive);
+            }
+
+            // Process images in answer
             const answerElement = newComment.querySelector('.followup-comment-answer');
             if (answerElement) {
                 await processImagesInContent(answerElement, fullResponse);
             }
 
-            // Get rendered HTML (with images) for saving
-            const renderedAnswerHtml = answerElement ? answerElement.innerHTML : marked.parse(fullResponse);
-
-            // Save comment to history with rendered HTML
+            // Save comment to history
             if (state.currentConversationId) {
                 saveCommentToHistory(state.currentConversationId, {
                     selectedText: selectedText,
                     question: question,
                     response: fullResponse,
-                    renderedResponse: renderedAnswerHtml,  // Save rendered HTML with images
+                    renderedResponse: newComment.querySelector('.followup-comment-answer').innerHTML,
                     createdAt: new Date().toISOString()
                 });
             }
@@ -2120,6 +2488,156 @@ async function submitComment() {
     // Reset submit button
     elements.submitCommentBtn.disabled = false;
     elements.submitCommentBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> 发送追问';
+}
+
+// Generate comment response using Flash model (faster, for quick answers)
+async function generateCommentResponse(prompt, imageParts = []) {
+    const apiKey = localStorage.getItem('gemini_api_key');
+
+    if (!apiKey) {
+        throw new Error('请先在设置中配置 API Key');
+    }
+
+    // Use Flash model for comment responses
+    const modelName = 'gemini-3-flash-preview';
+
+    const parts = [{ text: prompt }];
+    if (imageParts && imageParts.length > 0) {
+        parts.push(...imageParts);
+    }
+
+    const url = `${GEMINI_API_BASE}/${modelName}:streamGenerateContent?key=${apiKey}&alt=sse`;
+
+    const requestBody = {
+        contents: [{
+            role: 'user',
+            parts: parts
+        }],
+        generationConfig: {
+            temperature: 0.7,
+            topP: 0.95,
+            topK: 40,
+            maxOutputTokens: 500  // Limit for concise answers
+        }
+    };
+
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody)
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error?.message || `API请求失败: ${response.status}`);
+    }
+
+    return response;
+}
+
+// Handle deep dive button click - regenerate with Pro model
+async function handleDeepDive(event) {
+    const btn = event.target.closest('.deep-dive-btn');
+    if (!btn) return;
+
+    const commentId = btn.dataset.commentId;
+    const selectedText = btn.dataset.selectedText;
+    const question = btn.dataset.question;
+    const commentElement = document.getElementById(commentId);
+    const answerElement = commentElement.querySelector('.followup-comment-answer');
+
+    // Update button state
+    btn.disabled = true;
+    btn.innerHTML = '<div class="mini-spinner"></div> 深入分析中...';
+
+    try {
+        const startTime = Date.now();
+
+        // Build detailed prompt
+        const detailedPrompt = `用户在阅读报告时，选中了以下内容：
+
+"${selectedText}"
+
+用户的追问是：${question}
+
+【请给出详尽、专业的回答】
+- 深入分析问题本质
+- 提供具体的数据或案例支撑
+- 如有必要，给出多个维度的分析
+- 可以使用列表、表格等结构化方式
+- 预判用户可能的后续问题`;
+
+        // Use Pro model for detailed response
+        const response = await generateDetailedCommentResponse(detailedPrompt);
+
+        let fullResponse = '';
+        for await (const text of streamResponse(response)) {
+            fullResponse += text;
+        }
+
+        // Calculate stats
+        const endTime = Date.now();
+        const elapsedSeconds = Math.round((endTime - startTime) / 1000);
+        const minutes = Math.floor(elapsedSeconds / 60);
+        const seconds = elapsedSeconds % 60;
+        const timeStr = minutes > 0 ? `${minutes}分${seconds}秒` : `${seconds}秒`;
+        const charCount = fullResponse.replace(/\s/g, '').length;
+
+        // Update answer content
+        answerElement.innerHTML = marked.parse(fullResponse);
+
+        // Update footer - remove deep dive button, update stats
+        const footer = commentElement.querySelector('.comment-footer');
+        footer.innerHTML = `<span class="comment-statistics">📊 共 ${charCount} 字，思考时间 ${timeStr} (详尽版)</span>`;
+
+        scrollToBottom();
+
+    } catch (error) {
+        console.error('Error generating detailed response:', error);
+        btn.disabled = false;
+        btn.innerHTML = '🔍 深入了解';
+        alert('生成详尽回答失败，请稍后重试');
+    }
+}
+
+// Generate detailed comment response using Pro model
+async function generateDetailedCommentResponse(prompt) {
+    const apiKey = localStorage.getItem('gemini_api_key');
+
+    if (!apiKey) {
+        throw new Error('请先在设置中配置 API Key');
+    }
+
+    // Use Pro model for detailed responses
+    const modelName = 'gemini-3-pro-preview';
+
+    const url = `${GEMINI_API_BASE}/${modelName}:streamGenerateContent?key=${apiKey}&alt=sse`;
+
+    const requestBody = {
+        contents: [{
+            role: 'user',
+            parts: [{ text: prompt }]
+        }],
+        generationConfig: {
+            temperature: 0.7,
+            topP: 0.95,
+            topK: 40,
+            maxOutputTokens: 4096
+        }
+    };
+
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody)
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error?.message || `API请求失败: ${response.status}`);
+    }
+
+    return response;
 }
 
 function initCommentListeners() {
@@ -2432,6 +2950,47 @@ function init() {
     initEventListeners();
     updateStateHint();
 
+    // Initialize Image Managers for upload functionality
+    if (elements.mainImagePreview && elements.imageFileInput) {
+        mainImageManager = new ImageManager({
+            container: elements.mainImagePreview,
+            fileInput: elements.imageFileInput,
+            pasteTarget: elements.userInput,
+            maxImages: 10,
+            onUpdate: (images) => {
+                // Update UI hint when images change
+                if (images.length > 0) {
+                    elements.stateHint.textContent = `已添加 ${images.length} 张图片`;
+                } else {
+                    updateStateHint();
+                }
+            }
+        });
+
+        // Bind upload button click
+        if (elements.uploadImageBtn) {
+            elements.uploadImageBtn.addEventListener('click', () => {
+                elements.imageFileInput.click();
+            });
+        }
+    }
+
+    if (elements.commentImagePreview && elements.commentImageInput) {
+        commentImageManager = new ImageManager({
+            container: elements.commentImagePreview,
+            fileInput: elements.commentImageInput,
+            pasteTarget: elements.commentInput,
+            maxImages: 5  // Fewer images for comments
+        });
+
+        // Bind comment upload button click
+        if (elements.commentUploadBtn) {
+            elements.commentUploadBtn.addEventListener('click', () => {
+                elements.commentImageInput.click();
+            });
+        }
+    }
+
     // Set default settings
     if (localStorage.getItem('enable_image_gen') === null) {
         localStorage.setItem('enable_image_gen', 'true');
@@ -2444,7 +3003,7 @@ function init() {
         }, 1000);
     }
 
-    console.log('🚀 本地生活Agent 已启动 (支持Gemini 3 Pro Image + 主题切换)');
+    console.log('🚀 本地生活Agent 已启动 (支持Gemini 3 Pro Image + 图片上传 + 主题切换)');
 }
 
 // Start the app
