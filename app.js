@@ -179,7 +179,12 @@ const PHASE_TWO_PROMPT = `用户已经回答了追问，现在请根据问题类
 2. 每个观点：论点 + 论据 + 结论
 3. 不确定内容标注"[待验证]"
 4. 在关键节点插入2-3个图像占位符：[IMAGE: 配图描述]
-5. 详略得当，科普型可以更简洁，汇报型需要更完整`;
+5. 详略得当，科普型可以更简洁，汇报型需要更完整
+
+【禁止事项】
+- 禁止输出任何JSON格式
+- 禁止输出 {"questionType":...} 这样的结构
+- 只用纯Markdown格式输出报告内容`;
 
 
 // ============================================
@@ -577,11 +582,16 @@ async function generateResponse(userMessage, isPhaseTwo = false, imageParts = []
 
     const url = `${GEMINI_API_BASE}/${modelName}:streamGenerateContent?key=${apiKey}&alt=sse`;
 
+    // Add current date context for up-to-date information
+    const today = new Date();
+    const dateStr = `${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日`;
+    const dateContext = `\n\n【当前时间】\n今天是 ${dateStr}。请基于当前最新的市场情况、行业动态和公开信息来回答问题。如果涉及时效性数据，请说明数据的时间范围。`;
+
     // Build request body
     const requestBody = {
         contents: contents,
         systemInstruction: {
-            parts: [{ text: CEO_SYSTEM_PROMPT }]
+            parts: [{ text: CEO_SYSTEM_PROMPT + dateContext }]
         },
         generationConfig: {
             temperature: 0.7,
@@ -656,18 +666,36 @@ async function generateImage(prompt) {
         return { error: 'API Key未配置' };
     }
 
-    // 使用中文提示词，确保输出中文内容
-    const enhancedPrompt = `请生成一张专业的商业信息图。
+    // 使用中文提示词，确保输出高质量中文内容
+    const enhancedPrompt = `请生成一张专业的商业插图。
 
 主题：${prompt}
 
-要求：
-1. 所有文字必须使用简体中文
-2. 风格：现代简约商务风格
-3. 配色：使用美团品牌色（黄色#FFD100为主色，深蓝色为辅助色）
-4. 适合商业汇报展示使用
-5. 清晰的视觉层次
-6. 不要出现任何英文或乱码`;
+【画面风格】
+- 扁平化矢量插图风格（Flat Design Illustration）
+- 2.5D 等距视角，现代科技感
+- 简洁几何图形，圆润线条
+
+【色彩要求】
+- 主色：美团黄 #FFD100
+- 辅助色：深蓝 #1A1A2E、浅灰 #F5F5F5
+- 点缀色：活力橙 #FF6B35
+- 整体明亮、专业、有活力
+
+【质量要求】
+- 4K 超高清分辨率（3840x2160）
+- 印刷级品质，边缘清晰锐利
+- 无噪点、无模糊
+
+【文字要求】
+- 所有文字必须使用简体中文
+- 禁止出现英文、日文或乱码
+- 文字清晰可读
+
+【禁止内容】
+- 不要出现真人照片
+- 不要出现复杂的3D渲染
+- 不要出现任何英文单词`;
 
     // 使用 Gemini 3 Pro Image (Nano Banana Pro) 模型
     const url = `${GEMINI_API_BASE}/gemini-3-pro-image-preview:generateContent?key=${apiKey}`;
@@ -1334,12 +1362,11 @@ async function handleUserMessage(message) {
                         if (optBtn) {
                             optBtn.classList.toggle('selected');
                             const optKey = optBtn.dataset.option;
-                            if (optKey === 'other') {
-                                const input = optBtn.parentElement.querySelector('.option-input');
-                                if (input) {
-                                    input.style.display = optBtn.classList.contains('selected') ? 'block' : 'none';
-                                    if (optBtn.classList.contains('selected')) input.focus();
-                                }
+                            // Check if this option has an input field (for "其他" options)
+                            const input = optBtn.parentElement.querySelector('.option-input[data-option="' + optKey + '"]');
+                            if (input) {
+                                input.style.display = optBtn.classList.contains('selected') ? 'block' : 'none';
+                                if (optBtn.classList.contains('selected')) input.focus();
                             }
                         }
                         if (e.target.classList.contains('submit-answers-btn')) {
@@ -1391,7 +1418,8 @@ async function handleUserMessage(message) {
 
             state.currentState = AppState.IDLE;
             state.conversationHistory = [];
-            elements.userInput.parentElement.parentElement.style.display = '';
+            // Keep input hidden after report - user can click "新话题" to start new conversation
+            // elements.userInput.parentElement.parentElement.style.display = '';
         }
 
         updateStateHint();
@@ -1670,6 +1698,8 @@ function initEventListeners() {
                 state.currentState = AppState.IDLE;
                 state.userTopic = '';
                 updateStateHint();
+                // Show input box again
+                elements.userInput.parentElement.parentElement.style.display = '';
                 elements.userInput.focus();
                 elements.userInput.placeholder = '输入新话题开始对话...';
                 break;
@@ -2400,11 +2430,12 @@ async function submitComment() {
 
 用户的追问是：${question}
 
-【重要】请用简洁的方式回答，控制在50-100字以内。
-- 直接切入主题，不要寒暄
-- 不要重复引用选中内容
-- 如果问题简单，一两句话回答即可
-- 避免使用列表，用简洁的段落`;
+【回答要求】
+1. 必须给出完整的回答，不要中途停止
+2. 控制在100-300字左右，简洁但不遗漏关键信息
+3. 直接切入主题，不要寒暄
+4. 不要重复引用选中内容
+5. 如果问题复杂，可以适当展开说明`;
 
         if (imageParts.length > 0) {
             contextPrompt += '\n\n（用户还附带了 ' + imageParts.length + ' 张图片供参考，请结合图片内容分析）';
@@ -2517,7 +2548,7 @@ async function generateCommentResponse(prompt, imageParts = []) {
             temperature: 0.7,
             topP: 0.95,
             topK: 40,
-            maxOutputTokens: 500  // Limit for concise answers
+            maxOutputTokens: 2000  // Increased to avoid truncation
         }
     };
 
@@ -2698,27 +2729,18 @@ async function exportToPDF(reportElement) {
     const reportContent = reportElement.querySelector('.report-content');
     if (!reportContent) return;
 
-    // First, collect valid image URLs from original DOM (before cloning)
-    const validImageContainers = new Set();
-    reportContent.querySelectorAll('.ai-generated-image').forEach(container => {
-        const img = container.querySelector('img');
-        // Check if image is valid: has src, is loaded successfully, and has actual dimensions
-        if (img && img.src && img.complete && img.naturalWidth > 0) {
-            validImageContainers.add(container);
-        }
-    });
-
     // Clone content
     const cleanContent = reportContent.cloneNode(true);
 
-    // Remove failed image elements and loading placeholders
-    cleanContent.querySelectorAll('.image-error, .image-loading').forEach(el => el.remove());
+    // Only remove containers that have error or loading indicators
+    // Keep containers that have an img tag (even if still loading)
+    cleanContent.querySelectorAll('.ai-generated-image').forEach(container => {
+        const hasError = container.querySelector('.image-error');
+        const hasLoading = container.querySelector('.image-loading');
+        const hasImg = container.querySelector('img');
 
-    // Remove AI image containers that weren't in our valid set
-    cleanContent.querySelectorAll('.ai-generated-image').forEach((container, index) => {
-        const originalContainers = Array.from(reportContent.querySelectorAll('.ai-generated-image'));
-        const originalContainer = originalContainers[index];
-        if (!originalContainer || !validImageContainers.has(originalContainer)) {
+        // Remove if: has error, is loading, or has no image
+        if (hasError || hasLoading || !hasImg) {
             container.remove();
         }
     });
@@ -2758,12 +2780,19 @@ async function exportToPDF(reportElement) {
             .ai-generated-image { margin: 1.5em 0; }
             .ai-generated-image img { border-radius: 8px; }
             .image-caption { font-size: 0.85em; color: #666; margin-top: 0.5em; text-align: center; }
+            .image-caption svg { width: 14px; height: 14px; vertical-align: middle; margin-right: 4px; }
+            /* Hide failed/error images and containers */
+            .image-error, .image-loading { display: none !important; }
+            .ai-generated-image:empty { display: none !important; }
+            /* Hide broken images and empty containers */
+            img:not([src]), img[src=""] { display: none !important; }
             .header { text-align: center; margin-bottom: 2em; }
             .header h1 { border: none; }
             .footer { text-align: center; margin-top: 3em; color: #888; font-size: 0.9em; }
             @media print {
                 body { padding: 20px; }
                 img { break-inside: avoid; }
+                .image-error, .image-loading { display: none !important; }
             }
         </style>
     `;
